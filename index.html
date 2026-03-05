@@ -529,10 +529,10 @@ function recalc(){
   const zone=postnr?gZ(postnr):{z:0,t:0};
   const city=postnr?gC(postnr):'';
   const dkkM=dkk*(1+mu), nok=dkkM*aktKurs;
-  // Fragt: kun hvis postnr + paller>0 + total stk > 1
+  // Fragt: beregn hvis postnr + paller>0
   let fDKK=0, fNOK=0, fStk=0;
   const totalStk = spp && pp ? spp*pp : antalCalc;
-  if(postnr && pp>0 && totalStk>1){
+  if(postnr && pp>0){
     fDKK=calcF(ft,pp,zone.z); fNOK=fDKK*kf;
     fStk=fNOK/totalStk;
   }
@@ -724,7 +724,7 @@ function renderProds(){
     const nok=p.dkk*(1+mu)*aktR;
     let fStkP=0;
     const totalStkP=(p.spk&&p.kpp&&p.pp)?(p.spk*p.kpp*p.pp):(p.antal||1);
-    if(p.postnr && p.pp>0 && totalStkP>1){
+    if(p.postnr && p.pp>0){
       const z=gZ(p.postnr), fD=calcF(p.ft,p.pp,z.z), fN=fD*kf;
       fStkP=fN/totalStkP;
     }
@@ -761,7 +761,7 @@ function saveOffer(){
   const nok=dkk*(1+s.mu/100)*aktR;
   let fStkOf=0;
   const totalStkOf=(sppOf&&pp)?(sppOf*pp):(antal||1);
-  if(postnr && pp>0 && totalStkOf>1){
+  if(postnr && pp>0){
     const z=gZ(postnr), fD=calcF(ft,pp,z.z), fN=fD*s.kf;
     fStkOf=fN/totalStkOf;
   }
