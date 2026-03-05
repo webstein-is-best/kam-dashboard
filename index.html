@@ -129,7 +129,10 @@ const VEJSKAT={"1":17,"2":17,"3":22.59,"4":30.12,"5":37.65,"6":45.18,"7":52.71,"
     <div>
       <div class="card">
         <div class="card-title">Produkt & levering</div>
-        <div class="field"><label>Produktnavn</label><input type="text" id="i-prod" placeholder="f.eks. Organic Cotton 100%"></div>
+        <div class="field-row">
+          <div class="field"><label>Kundenavn</label><input type="text" id="i-kunde" placeholder="f.eks. Rema 1000"></div>
+          <div class="field"><label>Produktnavn</label><input type="text" id="i-prod" placeholder="f.eks. Organic Cotton 100%"></div>
+        </div>
         <div class="field-row">
           <div class="field"><label>Kategori</label><select id="i-kat"><option>Non-food</option><option>Frys</option></select></div>
           <div class="field"><label>Indkøbspris (DKK pr stk)</label><input type="number" id="i-dkk" step="0.01" placeholder="59,43"></div>
@@ -183,13 +186,13 @@ const VEJSKAT={"1":17,"2":17,"3":22.59,"4":30.12,"5":37.65,"6":45.18,"7":52.71,"
             <div><span style="opacity:0.7">Kostpris DKK:</span> <b id="r-kp-kostdkk">—</b></div>
             <div><span style="opacity:0.7">Kostpris NOK:</span> <b id="r-kp-kostnok">—</b></div>
           </div>
+          <div id="r-kurs-badge" style="margin-top:0.6rem;font-size:0.75rem;display:inline-block;padding:0.2rem 0.7rem;border-radius:20px;background:rgba(255,255,255,0.2);letter-spacing:0.02em">Sikret kurs: 1,6600</div>
         </div>
 
-        <div class="res-section">
-          <div class="res-label">Levering</div>
-          <div class="res-row"><span class="l">Zone</span><span class="v" id="r-zone">—</span></div>
-          <div class="res-row"><span class="l">By</span><span class="v" id="r-by">—</span></div>
-          <div class="res-row"><span class="l">Leveringstid</span><span class="v" id="r-lev">—</span></div>
+        <div style="display:flex;gap:1.5rem;font-size:0.8rem;color:#6b7280;padding:0.4rem 0;margin-bottom:0.25rem;flex-wrap:wrap">
+          <div>Zone: <b id="r-zone" style="color:#374151">—</b></div>
+          <div>By: <b id="r-by" style="color:#374151">—</b></div>
+          <div>Levering: <b id="r-lev" style="color:#374151">—</b></div>
         </div>
 
         
@@ -619,6 +622,12 @@ function recalc(){
   el('r-kp-total').textContent=fn(tOms);
   el('r-kp-paller').textContent=pp||'—';
   el('r-kp-kostdkk').textContent=f(kostDKK)+' DKK';
+  const kursBadge=el('r-kurs-badge');
+  if(kursBadge){
+    const isSikret=S.activeKurs!=='dags';
+    kursBadge.textContent=(isSikret?'Sikret kurs: ':'Dagskurs: ')+f(aktKurs,4);
+    kursBadge.style.background=isSikret?'rgba(255,255,255,0.2)':'rgba(5,150,105,0.4)';
+  }
   el('r-kp-kostnok').textContent=f(kost)+' NOK';
 
   // Din ordre kort
@@ -691,7 +700,7 @@ function updateCity(){
 // ===== PRODUCTS =====
 function saveProd(){
   S.prods.push({
-    id:Date.now(), prod:el('i-prod').value||'Uden navn', kat:el('i-kat').value,
+    id:Date.now(), kunde:el('i-kunde').value||'', prod:el('i-prod').value||'Uden navn', kat:el('i-kat').value,
     dkk:parseFloat(el('i-dkk').value)||0, salg:parseFloat(el('i-salg').value)||0,
     antal:parseInt(el('i-antal').value)||0, ft:el('i-fragt').value,
     pp:parseInt(el('i-pp').value)||0, spk:parseInt(el('i-spk').value)||0, kpp:parseInt(el('i-kpp').value)||0, postnr:resolvePostnr()
@@ -701,7 +710,7 @@ function saveProd(){
 
 function loadProd(id){
   const p=S.prods.find(x=>x.id===id); if(!p) return;
-  el('i-prod').value=p.prod; el('i-kat').value=p.kat; el('i-dkk').value=p.dkk;
+  el('i-kunde').value=p.kunde||''; el('i-prod').value=p.prod; el('i-kat').value=p.kat; el('i-dkk').value=p.dkk;
   el('i-salg').value=p.salg||''; el('i-antal').value=p.antal; el('i-fragt').value=p.ft;
   el('i-pp').value=p.pp; el('i-spk').value=p.spk||''; el('i-kpp').value=p.kpp||''; el('i-postnr').value=(gC(p.postnr)?(gC(p.postnr)+' ('+p.postnr+')'):p.postnr);el('i-postnr').dataset.pnr=p.postnr;
   updateCity(); recalc();
@@ -733,7 +742,7 @@ function renderProds(){
     const margin=salg>0?((salg-kost)/salg*100):0;
     const prisTotal=salg*(p.antal||1);
     return '<div class="prod-item" onclick="loadProd('+p.id+')" style="flex-wrap:wrap;gap:0.5rem">'+
-      '<div style="flex:1;min-width:140px"><div class="name">'+p.prod+'</div><div class="meta">'+(p.postnr?gC(p.postnr):'')+' &middot; '+p.ft+'</div></div>'+
+      '<div style="flex:1;min-width:140px"><div class="name">'+p.prod+(p.kunde?' <span style="color:#6b7280;font-weight:400;font-size:0.85em">— '+p.kunde+'</span>':'')+'</div><div class="meta">'+(p.postnr?gC(p.postnr):'')+' &middot; '+p.ft+'</div></div>'+
       '<div style="display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap">'+
         '<div style="text-align:center"><div style="font-size:0.65rem;color:#9ca3af;text-transform:uppercase;letter-spacing:0.03em">Pris/stk</div><div style="font-weight:700;color:#1a56db;font-size:0.95rem">'+f(salg)+' <small>NOK</small></div></div>'+
         '<div style="text-align:center"><div style="font-size:0.65rem;color:#9ca3af;text-transform:uppercase;letter-spacing:0.03em">Pris total</div><div style="font-weight:700;font-size:0.95rem">'+fn(prisTotal)+'</div></div>'+
@@ -769,7 +778,7 @@ function saveOffer(){
   const salg=parseFloat(el('i-salg').value)||kost/(1-(kat==='Non-food'?s.mnf:s.mf)/100);
   const margin=salg>0?((salg-kost)/salg*100):0;
   const n=S.offers.length?Math.max(...S.offers.map(o=>o.num||0))+1:1;
-  S.offers.push({num:n,id:Date.now(),dato:new Date().toISOString().split('T')[0],kunde:'',
+  S.offers.push({num:n,id:Date.now(),dato:new Date().toISOString().split('T')[0],kunde:el('i-kunde').value||'',
     prod:el('i-prod').value||'Uden navn',kat:kat,antal:antal,salg:salg,total:salg*antal,margin:margin,status:'Udkast',noter:''});
   save(); showPage('offers');
 }
@@ -884,7 +893,7 @@ function showPage(id){
 }
 
 function clearCalc(){
-  ['i-prod','i-dkk','i-bcnok','i-salg-dkk','i-salg','i-antal','i-postnr','i-pp','i-spk','i-kpp'].forEach(id=>{document.getElementById(id).value='';});delete el('i-postnr').dataset.pnr;el('spp-hint').textContent='';
+  ['i-kunde','i-prod','i-dkk','i-bcnok','i-salg-dkk','i-salg','i-antal','i-postnr','i-pp','i-spk','i-kpp'].forEach(id=>{document.getElementById(id).value='';});delete el('i-postnr').dataset.pnr;el('spp-hint').textContent='';
   el('res-card').style.opacity='0.3';
   el('city-hint').textContent='';
   el('salg-hint').textContent='';
